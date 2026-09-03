@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบจัดการการบ้าน ม.4/10 | โรงเรียนบรรหารแจ่มใสวิทยา 3</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Prompt', 'sans-serif'],
+          },
+          colors: {
+            school: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col selection:bg-blue-100 selection:text-blue-900">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Header Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20">
+        <!-- Logo & Title -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+            <span class="text-xl sm:text-2xl">🏫</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+                ระบบจัดการการบ้าน <span id="room-name-display" class="text-blue-600">ม.4/10</span>
+              </h1>
+              <span class="hidden md:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                ห้อง 10
+              </span>
+            </div>
+            <p id="school-name-display" class="text-xs sm:text-sm text-slate-500 font-normal">
+              โรงเรียนบรรหารแจ่มใสวิทยา 3
+            </p>
+          </div>
+        </div>
+
+        <!-- Top Right Actions -->
+        <div class="flex items-center gap-2">
+          <!-- Backup / Settings Dropdown -->
+          <div class="relative group">
+            <button class="p-2 sm:px-3 sm:py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 border border-slate-200" title="จัดการข้อมูล">
+              <i data-lucide="database" class="w-4 h-4"></i>
+              <span class="hidden sm:inline">จัดการข้อมูล</span>
+            </button>
+            <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 hidden group-hover:block hover:block z-40">
+              <button onclick="exportData()" class="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                <i data-lucide="download" class="w-3.5 h-3.5 text-blue-600"></i> ส่งออกข้อมูล (JSON)
+              </button>
+              <label class="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer">
+                <i data-lucide="upload" class="w-3.5 h-3.5 text-emerald-600"></i> นำเข้าข้อมูล (JSON)
+                <input type="file" id="import-file-input" accept=".json" class="hidden">
+              </label>
+              <div class="border-t border-slate-100 my-1"></div>
+              <button onclick="window.print()" class="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                <i data-lucide="printer" class="w-3.5 h-3.5 text-slate-600"></i> พิมพ์ / บันทึก PDF
+              </button>
+              <button onclick="resetToDefault()" class="w-full text-left px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> รีเซ็ตเป็นค่าเริ่มต้น
+              </button>
+            </div>
+          </div>
+
+          <!-- Add Homework Button -->
+          <button onclick="openAddTaskModal()" class="px-3.5 py-2 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-sm hover:shadow-md transition-all flex items-center gap-1.5">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>เพิ่มการบ้าน</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+    <!-- Announcement Banner -->
+    <div id="announcement-banner" class="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white rounded-2xl p-4 sm:p-5 shadow-sm relative overflow-hidden transition-all">
+      <div class="flex items-start sm:items-center justify-between gap-3 relative z-10">
+        <div class="flex items-start sm:items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+            <i data-lucide="megaphone" class="w-5 h-5 text-white"></i>
+          </div>
+          <div>
+            <div class="text-xs font-semibold uppercase tracking-wider text-amber-100 flex items-center gap-2">
+              ประกาศห้อง ม.4/10
+            </div>
+            <p id="announcement-text" class="text-sm sm:text-base font-medium text-white mt-0.5">
+              งานกีฬาสีสัปดาห์หน้า งดสั่งการบ้านวิชาพลศึกษาและศิลปะ!
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1 flex-shrink-0">
+          <button onclick="editAnnouncement()" class="p-1.5 hover:bg-white/20 rounded-lg text-white/90 hover:text-white transition-colors" title="แก้ไขข้อความประกาศ">
+            <i data-lucide="pencil" class="w-4 h-4"></i>
+          </button>
+          <button onclick="toggleAnnouncement()" class="p-1.5 hover:bg-white/20 rounded-lg text-white/90 hover:text-white transition-colors" title="ซ่อนประกาศ">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+      <!-- Background pattern decoration -->
+      <div class="absolute -right-6 -bottom-10 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+    </div>
+
+    <!-- Grade Level / Semester Selector Bar -->
+    <div class="bg-white rounded-2xl p-4 sm:px-6 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+          <i data-lucide="map-pin" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <span class="text-xs text-slate-400 font-medium">ระดับชั้นปัจจุบัน</span>
+          <h2 id="current-grade-display" class="text-sm sm:text-base font-bold text-slate-800">
+            มัธยมศึกษาปีที่ 4 (ภาคเรียนที่ 1)
+          </h2>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 self-end sm:self-auto">
+        <label for="grade-select" class="text-xs text-slate-500 font-medium">เปลี่ยนระดับชั้น:</label>
+        <select id="grade-select" class="text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <!-- Dynamically populated -->
+        </select>
+      </div>
+    </div>
+
+    <!-- Dashboard Stats Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Card: ทั้งหมด -->
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-slate-500">การบ้านทั้งหมด</p>
+          <h3 id="stat-total" class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">7</h3>
+        </div>
+        <div class="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+          <i data-lucide="book-open" class="w-5 h-5"></i>
+        </div>
+      </div>
+
+      <!-- Card: ส่งแล้ว -->
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-500">ส่งแล้ว / เสร็จสิ้น</p>
+            <h3 id="stat-completed" class="text-2xl sm:text-3xl font-bold text-emerald-600 mt-1">2</h3>
+          </div>
+          <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+          </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="mt-3">
+          <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+            <span>ความคืบหน้า</span>
+            <span id="stat-progress-text" class="font-semibold text-emerald-600">29%</span>
+          </div>
+          <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div id="stat-progress-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 29%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: ค้างส่ง -->
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-slate-500">ยังค้างส่ง</p>
+          <h3 id="stat-pending" class="text-2xl sm:text-3xl font-bold text-amber-600 mt-1">5</h3>
+        </div>
+        <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+          <i data-lucide="clock" class="w-5 h-5"></i>
+        </div>
+      </div>
+
+      <!-- Card: งานด่วน / ใกล้ส่ง -->
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-slate-500">ส่งเร็วๆ นี้ / เลยกำหนด</p>
+          <h3 id="stat-urgent" class="text-2xl sm:text-3xl font-bold text-rose-600 mt-1">0</h3>
+        </div>
+        <div class="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
+          <i data-lucide="alert-circle" class="w-5 h-5"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls Bar: Filters, Search, and View Mode -->
+    <div class="space-y-3">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+        <!-- Status Filter Pills -->
+        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto">
+          <button data-status="all" onclick="setStatusFilter('all')" class="status-filter-btn px-4 py-1.5 rounded-lg text-xs font-semibold bg-white text-blue-600 shadow-xs transition-all">
+            ทั้งหมด
+          </button>
+          <button data-status="pending" onclick="setStatusFilter('pending')" class="status-filter-btn px-4 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all">
+            ยังไม่เสร็จ
+          </button>
+          <button data-status="completed" onclick="setStatusFilter('completed')" class="status-filter-btn px-4 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all">
+            ส่งแล้ว
+          </button>
+          <button data-status="group" onclick="setStatusFilter('group')" class="status-filter-btn px-4 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all">
+            งานกลุ่ม
+          </button>
+        </div>
+
+        <!-- Search & Sort & View Mode -->
+        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <!-- Search input -->
+          <div class="relative flex-1 sm:w-64">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="search-input" placeholder="ค้นหาชื่องาน, วิชา, หมายเหตุ..." 
+              class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <!-- Sort dropdown -->
+          <select id="sort-select" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="due-asc">กำหนดส่ง: ใกล้สุด</option>
+            <option value="due-desc">กำหนดส่ง: ไกลสุด</option>
+            <option value="assigned-desc">วันที่สั่ง: ล่าสุด</option>
+            <option value="subject">ตามชื่อวิชา</option>
+          </select>
+
+          <!-- View Mode Toggle (Card vs Table) -->
+          <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button id="view-mode-card" onclick="setViewMode('card')" class="p-1.5 rounded-lg bg-white text-blue-600 shadow-xs transition-all" title="มุมมองการ์ด">
+              <i data-lucide="layout-grid" class="w-4 h-4"></i>
+            </button>
+            <button id="view-mode-table" onclick="setViewMode('table')" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition-all" title="มุมมองตาราง">
+              <i data-lucide="list" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subject Filter Pills (Dynamically rendered) -->
+      <div id="subject-filter-container" class="flex items-center gap-1.5 overflow-x-auto pb-1">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+
+    <!-- Tasks List Container -->
+    <div id="tasks-container">
+      <!-- Injected via JavaScript -->
+    </div>
+
+    <!-- Grade Transition Tip / Footer Note -->
+    <div class="mt-8 p-4 rounded-2xl bg-blue-50/60 border border-blue-100 text-xs text-blue-800 flex items-start gap-2.5">
+      <i data-lucide="info" class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0"></i>
+      <div>
+        <span class="font-semibold">คำแนะนำการเลื่อนชั้น:</span> เมื่อขึ้น ม.5 หรือภาคเรียนถัดไป คุณสามารถคลิกที่เมนู <strong>"เปลี่ยนระดับชั้น"</strong> ด้านบนเพื่อเลือกหรือเพิ่มภาคเรียนใหม่ได้ทันที ข้อมูลของ ม.4 จะถูกบันทึกเก็บไว้เป็นประวัติอย่างปลอดภัยในระบบ
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 no-print">
+    <p>โครงงานระบบติดตามและจัดการการบ้าน ม.4/10 โรงเรียนบรรหารแจ่มใสวิทยา 3</p>
+    <p class="mt-1 text-[11px] text-slate-400">พัฒนาเพื่อส่งเสริมการทำงานร่วมกันในกลุ่มและไม่พลาดกำหนดส่งงาน</p>
+  </footer>
+
+  <!-- Modal: เพิ่ม / แก้ไขการบ้าน -->
+  <div id="task-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 transform transition-all max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <h3 id="modal-task-title-header" class="text-base font-bold text-slate-800">
+          เพิ่มการบ้านใหม่
+        </h3>
+        <button onclick="closeTaskModal()" class="p-1 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="task-form" class="space-y-4 mt-4 text-xs">
+        <input type="hidden" id="task-id-input">
+
+        <!-- ชื่อวิชา & รหัสวิชา -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <label class="block font-medium text-slate-700 mb-1">ชื่อวิชา <span class="text-rose-500">*</span></label>
+            <input type="text" id="task-subject-name" list="existing-subjects-list" placeholder="เช่น คณิตศาสตร์เพิ่มเติม" required
+              class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <datalist id="existing-subjects-list"></datalist>
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">รหัสวิชา</label>
+            <input type="text" id="task-subject-code" placeholder="เช่น ค31201"
+              class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+
+        <!-- ครูผู้สอน -->
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">ครูผู้สอน</label>
+          <input type="text" id="task-teacher" list="existing-teachers-list" placeholder="เช่น ครูสมชาย ใจดี"
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <datalist id="existing-teachers-list"></datalist>
+        </div>
+
+        <!-- ชื่องาน / รายละเอียด -->
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">ชื่องาน / รายละเอียดการบ้าน <span class="text-rose-500">*</span></label>
+          <input type="text" id="task-title" placeholder="เช่น แบบฝึกหัด 1.1 เรื่องเซต (หน้า 15)" required
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- ประเภทงาน (งานกลุ่ม/งานเดี่ยว) -->
+        <div class="flex items-center gap-2 p-3 bg-amber-50/70 border border-amber-200/60 rounded-xl">
+          <input type="checkbox" id="task-is-group" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-slate-300">
+          <label for="task-is-group" class="font-medium text-amber-900 cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="users" class="w-4 h-4 text-amber-700"></i> เป็นงานกลุ่ม (Group Assignment)
+          </label>
+        </div>
+
+        <!-- วันที่สั่ง & กำหนดส่ง -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">วันที่สั่ง</label>
+            <input type="date" id="task-assigned-date"
+              class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">กำหนดส่ง <span class="text-rose-500">*</span></label>
+            <input type="date" id="task-due-date" required
+              class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+
+        <!-- หมายเหตุ / วิธีส่ง -->
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">หมายเหตุ / รูปแบบการส่ง</label>
+          <textarea id="task-notes" rows="2" placeholder="เช่น ส่งในคาบเรียน, ทำรูปเล่ม 5 คน, ถ่ายรูปลง Google Classroom"
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+
+        <!-- สีประจำวิชา -->
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">ธีมสีประจำวิชา</label>
+          <select id="task-color" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="blue">น้ำเงิน (Blue)</option>
+            <option value="emerald">เขียว (Emerald)</option>
+            <option value="purple">ม่วง (Purple)</option>
+            <option value="amber">ส้มทอง (Amber)</option>
+            <option value="rose">ชมพูแดง (Rose)</option>
+            <option value="cyan">ฟ้าสว่าง (Cyan)</option>
+            <option value="indigo">คราม (Indigo)</option>
+          </select>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+          <button type="button" onclick="closeTaskModal()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors">
+            ยกเลิก
+          </button>
+          <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-xs">
+            บันทึกข้อมูล
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="app.js"></script>
+</body>
+</html>
