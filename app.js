@@ -202,63 +202,32 @@ function showScreen(screenId) {
    ========================================================================== */
 
 function renderRoomSelection() {
-  const container = document.getElementById('room-list-container');
-  if (!container) return;
-  
-  const rooms = Object.values(appData.rooms);
-  if (rooms.length === 0) {
-    container.innerHTML = `<p class="text-slate-500 text-sm text-center py-4">ยังไม่มีห้องเรียน กรุณาสร้างห้องใหม่</p>`;
-    return;
+  const input = document.getElementById('global-pin-input');
+  if (input) {
+    input.value = '';
+    setTimeout(() => input.focus(), 100);
   }
-
-  let html = '';
-  rooms.forEach(room => {
-    html += `
-      <button onclick="promptRoomPin('${room.id}')" class="w-full text-left p-4 rounded-2xl border border-slate-200 bg-white hover:border-blue-500 hover:shadow-md transition-all flex items-center justify-between group">
-        <div>
-          <h3 class="text-lg font-bold text-slate-800">${room.name}</h3>
-          <p class="text-xs text-slate-500 mt-1"><i data-lucide="users" class="w-3 h-3 inline"></i> นักเรียน ${room.students.length} คน | <i data-lucide="layers" class="w-3 h-3 inline"></i> กลุ่ม ${room.groups.length} กลุ่ม</p>
-        </div>
-        <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-          <i data-lucide="chevron-right" class="w-5 h-5"></i>
-        </div>
-      </button>
-    `;
-  });
-  container.innerHTML = html;
-  if (window.lucide) lucide.createIcons();
 }
 
-let pendingLoginRoomId = null;
-
-function promptRoomPin(roomId) {
-  const room = appData.rooms[roomId];
-  if (!room) return;
-  pendingLoginRoomId = roomId;
-  document.getElementById('login-room-name').textContent = room.name;
-  document.getElementById('pin-input').value = '';
-  
-  document.getElementById('pin-modal').classList.remove('hidden');
-  document.getElementById('pin-modal').classList.add('flex');
-  setTimeout(() => document.getElementById('pin-input').focus(), 100);
-}
-
-function closePinModal() {
-  document.getElementById('pin-modal').classList.add('hidden');
-  document.getElementById('pin-modal').classList.remove('flex');
-  pendingLoginRoomId = null;
-}
-
-function handlePinSubmit(e) {
+function handleGlobalLogin(e) {
   e.preventDefault();
-  const inputPin = document.getElementById('pin-input').value;
-  const room = appData.rooms[pendingLoginRoomId];
+  const inputPin = document.getElementById('global-pin-input').value.trim();
   
-  if (room.pin === inputPin) {
-    closePinModal();
-    enterRoom(room.id);
+  if (!inputPin) return;
+  
+  let foundRoom = null;
+  for (const key in appData.rooms) {
+    if (appData.rooms[key].pin === inputPin) {
+      foundRoom = appData.rooms[key];
+      break;
+    }
+  }
+  
+  if (foundRoom) {
+    document.getElementById('global-pin-input').value = '';
+    enterRoom(foundRoom.id);
   } else {
-    showToast('รหัสผ่านไม่ถูกต้อง', 'error');
+    showToast('รหัสห้องเรียนไม่ถูกต้อง', 'error');
   }
 }
 
@@ -300,6 +269,14 @@ function handleCreateRoomSubmit(e) {
   
   if (!name || !pin) return;
   
+  // Check if PIN already exists
+  for (const key in appData.rooms) {
+    if (appData.rooms[key].pin === pin) {
+      showToast('รหัสผ่านนี้มีห้องอื่นใช้แล้ว กรุณาตั้งรหัสอื่น', 'error');
+      return;
+    }
+  }
+  
   const newRoomId = 'room-' + Date.now();
   appData.rooms[newRoomId] = {
     id: newRoomId,
@@ -314,6 +291,9 @@ function handleCreateRoomSubmit(e) {
   closeCreateRoomModal();
   renderRoomSelection();
   showToast('สร้างห้องเรียนสำเร็จ');
+  
+  // Auto login to the newly created room
+  enterRoom(newRoomId);
 }
 
 /* ==========================================================================
@@ -978,7 +958,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('search-input')?.addEventListener('input', e => { currentFilters.search = e.target.value; renderTasks(); });
   document.getElementById('sort-select')?.addEventListener('change', e => { currentFilters.sortBy = e.target.value; renderTasks(); });
   document.getElementById('task-form')?.addEventListener('submit', handleTaskFormSubmit);
-  document.getElementById('pin-form')?.addEventListener('submit', handlePinSubmit);
+  document.getElementById('global-login-form')?.addEventListener('submit', handleGlobalLogin);
   document.getElementById('create-room-form')?.addEventListener('submit', handleCreateRoomSubmit);
   
   // Enter keys for add members

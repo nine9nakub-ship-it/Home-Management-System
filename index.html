@@ -30,10 +30,17 @@
         <span class="text-3xl">🏫</span>
       </div>
       <h1 class="text-2xl font-bold text-slate-800 mb-2">ระบบจัดการการบ้าน</h1>
-      <p class="text-sm text-slate-500 mb-8">เลือกระดับชั้น/ห้องเรียนของคุณ เพื่อเข้าสู่ระบบ</p>
+      <p class="text-sm text-slate-500 mb-6">กรอกรหัสผ่าน (PIN) เพื่อเข้าสู่ห้องเรียนของคุณ</p>
 
-      <div id="room-list-container" class="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2">
-        <!-- Rooms injected here -->
+      <form id="global-login-form" class="space-y-4 mb-6">
+        <input type="password" id="global-pin-input" placeholder="รหัสห้องเรียน" required class="w-full text-center tracking-[0.5em] text-xl px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-bold text-slate-700">
+        <button type="submit" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 shadow-md transition-all">เข้าสู่ระบบ</button>
+      </form>
+
+      <div class="relative flex py-3 items-center mb-6">
+        <div class="flex-grow border-t border-slate-200"></div>
+        <span class="flex-shrink-0 mx-4 text-slate-400 text-xs">หรือ</span>
+        <div class="flex-grow border-t border-slate-200"></div>
       </div>
 
       <button onclick="openCreateRoomModal()" class="w-full py-3 rounded-xl border-2 border-dashed border-blue-200 text-blue-600 font-semibold hover:bg-blue-50 hover:border-blue-300 transition-colors flex items-center justify-center gap-2">
@@ -159,22 +166,7 @@
        MODALS
        ========================================== -->
   
-  <!-- PIN Modal -->
-  <div id="pin-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl">
-      <div class="text-center mb-6">
-        <h3 class="text-lg font-bold text-slate-800">เข้าสู่ห้อง <span id="login-room-name" class="text-blue-600"></span></h3>
-        <p class="text-sm text-slate-500 mt-1">กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบ</p>
-      </div>
-      <form id="pin-form" class="space-y-4">
-        <input type="password" id="pin-input" placeholder="รหัสผ่านห้อง (PIN)" required class="w-full text-center tracking-[0.5em] text-lg px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500">
-        <div class="flex gap-2">
-          <button type="button" onclick="closePinModal()" class="flex-1 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-medium">ยกเลิก</button>
-          <button type="submit" class="flex-1 py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700">ยืนยัน</button>
-        </div>
-      </form>
-    </div>
-  </div>
+
 
   <!-- Create Room Modal -->
   <div id="create-room-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
