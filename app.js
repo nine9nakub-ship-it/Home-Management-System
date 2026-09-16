@@ -154,40 +154,67 @@ function triggerConfetti() {
 }
 
 /* ==========================================================================
-   Storage & Initialization
+   Firebase Initialization & Storage
    ========================================================================== */
 
+const firebaseConfig = {
+  apiKey: "AIzaSyAJeETyet_itdZJr7YJMop_Hn6XPqLEvL0",
+  authDomain: "homework-84592.firebaseapp.com",
+  databaseURL: "https://homework-84592-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "homework-84592",
+  storageBucket: "homework-84592.firebasestorage.app",
+  messagingSenderId: "427810341104",
+  appId: "1:427810341104:web:9f60989469a4037bcd4235"
+};
+
+// เริ่มการเชื่อมต่อ Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 function loadData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      appData = JSON.parse(raw);
+  // Listen for realtime changes
+  db.ref('appData').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      appData = data;
+      
+      // Firebase removes empty arrays, so we need to ensure they exist
+      if (!appData.rooms) appData.rooms = {};
+      if (!appData.tasks) appData.tasks = [];
+      Object.values(appData.rooms).forEach(r => {
+        if (!r.students) r.students = [];
+        if (!r.groups) r.groups = [];
+      });
+      appData.tasks.forEach(t => {
+        if (!t.completions) t.completions = [];
+      });
+      
+    } else {
+      // First time initialization (no data in Firebase yet)
+      appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      saveData();
     }
-  } catch (e) {
-    console.error('Error reading localStorage:', e);
-  }
-  
-  if (!appData || appData.version !== 2) {
-    // Migration or initialization
-    appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
-    saveData();
-  }
+
+    // Refresh UI automatically when data changes (Realtime!)
+    if (currentRoomId) {
+      refreshDashboard();
+    }
+  });
 }
 
 function saveData() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-  } catch (e) {
-    console.error('Error saving to localStorage:', e);
-    showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
-  }
+  db.ref('appData').set(appData).catch(err => {
+    console.error('Save failed:', err);
+    showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล (ออฟไลน์)', 'error');
+  });
 }
 
 function initApp() {
   loadData();
-  renderRoomSelection();
   
-  // See if there's a stored session (optional), for now always start at login
+  const input = document.getElementById('global-pin-input');
+  if (input) setTimeout(() => input.focus(), 100);
+  
   showScreen('login-screen');
 }
 
