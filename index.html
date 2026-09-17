@@ -68,21 +68,9 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="openMembersModal()" class="hidden sm:flex px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-medium transition-colors items-center gap-1.5 border border-slate-200">
+            <button onclick="openMembersModal()" class="flex px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-medium transition-colors items-center gap-1.5 border border-slate-200">
               <i data-lucide="users" class="w-4 h-4"></i> จัดการสมาชิก
             </button>
-            <div class="relative group">
-              <button class="p-2 sm:px-3 sm:py-2 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-medium transition-colors border border-slate-200">
-                <i data-lucide="more-vertical" class="w-4 h-4 sm:hidden"></i>
-                <span class="hidden sm:inline"><i data-lucide="settings" class="w-4 h-4 inline mr-1"></i>ตั้งค่า</span>
-              </button>
-              <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 hidden group-hover:block hover:block z-40">
-                <button onclick="openMembersModal()" class="sm:hidden w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50"><i data-lucide="users" class="w-3.5 h-3.5 inline mr-2 text-blue-600"></i> จัดการสมาชิก</button>
-                <button onclick="exportData()" class="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50"><i data-lucide="download" class="w-3.5 h-3.5 inline mr-2 text-blue-600"></i> สำรองข้อมูล (JSON)</button>
-                <label class="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 cursor-pointer block"><i data-lucide="upload" class="w-3.5 h-3.5 inline mr-2 text-emerald-600"></i> นำเข้า (JSON) <input type="file" id="import-file-input" accept=".json" class="hidden"></label>
-                <button onclick="resetToDefault()" class="w-full text-left px-4 py-2 text-xs text-rose-600 hover:bg-rose-50"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5 inline mr-2"></i> รีเซ็ตแอป</button>
-              </div>
-            </div>
             <button onclick="openAddTaskModal()" class="px-3.5 py-2 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-sm transition-all flex items-center gap-1.5">
               <i data-lucide="plus-circle" class="w-4 h-4"></i><span class="hidden sm:inline">เพิ่มการบ้าน</span>
             </button>

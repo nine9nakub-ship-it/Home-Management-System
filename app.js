@@ -928,52 +928,7 @@ function removeMember(type, name) {
   renderMemberList(type);
 }
 
-/* ==========================================================================
-   Data Export / Import
-   ========================================================================== */
 
-function exportData() {
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
-  const a = document.createElement('a');
-  a.setAttribute("href", dataStr);
-  a.setAttribute("download", `homework_backup_${new Date().toISOString().slice(0,10)}.json`);
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  showToast('ส่งออกไฟล์สำรองข้อมูลสำเร็จ');
-}
-
-function importData(file) {
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const imported = JSON.parse(e.target.result);
-      if (imported && imported.rooms) {
-        appData = imported;
-        saveData();
-        currentRoomId = null;
-        initApp();
-        showToast('นำเข้าข้อมูลเรียบร้อยแล้ว!');
-      } else {
-        showToast('รูปแบบไฟล์ไม่ถูกต้อง', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast('ไม่สามารถอ่านไฟล์ JSON ได้', 'error');
-    }
-  };
-  reader.readAsText(file);
-}
-
-function resetToDefault() {
-  if (confirm('คุณต้องการรีเซ็ตข้อมูลทั้งหมดกลับเป็นค่าเริ่มต้นใช่หรือไม่? (ข้อมูลที่เพิ่มใหม่จะหายไป)')) {
-    localStorage.removeItem(STORAGE_KEY);
-    currentRoomId = null;
-    initApp();
-    showToast('คืนค่าข้อมูลเริ่มต้นเรียบร้อยแล้ว');
-  }
-}
 
 /* ==========================================================================
    Setup Event Listeners
@@ -992,7 +947,4 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('new-student-input')?.addEventListener('keypress', e => { if (e.key === 'Enter') addMember('students'); });
   document.getElementById('new-group-input')?.addEventListener('keypress', e => { if (e.key === 'Enter') addMember('groups'); });
 
-  document.getElementById('import-file-input')?.addEventListener('change', e => {
-    if (e.target.files && e.target.files[0]) { importData(e.target.files[0]); e.target.value = ''; }
-  });
 });
